@@ -922,6 +922,7 @@ public class PDO implements EnvCleanup {
     int port = -1;
     String dbName = null;
 
+    String charset = null;
     for (Map.Entry<String,String> entry : attrMap.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
@@ -945,6 +946,9 @@ public class PDO implements EnvCleanup {
       else if ("password".equals(key)) {
         pass = value;
       }
+      else if ("charset".equals(key)) {
+        charset = value;
+      }
       else {
         env.warning(L.l("pdo dsn attribute not supported: {0}={1}", key, value));
       }
@@ -965,6 +969,9 @@ public class PDO implements EnvCleanup {
                                 socket, flags, driver, url, isNewLink,
                                 _isEmulatePrepares, _initQuery);
 
+    if (charset != null) {
+      mysqli.set_charset(env,env.createString(charset));
+    }
     return mysqli;
   }
 
