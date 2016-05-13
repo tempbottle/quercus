@@ -105,7 +105,7 @@ public class ReflectionMethod extends ReflectionFunctionAbstract
     env.pushCall(expr, object, args.getValueArray(env));
 
     try {
-      return fun.callMethod(env, object.getQuercusClass(), object,
+      return fun.callMethod(env, getDeclaringClass(env).getQuercusClass(), object,
                             args.getValueArray(env));
     }
     finally {
