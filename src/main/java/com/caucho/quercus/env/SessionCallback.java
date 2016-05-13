@@ -62,8 +62,6 @@ public class SessionCallback extends Value {
     _destroy = destroy;
     _gc = gc;
 
-    if (open == null)
-      throw new NullPointerException("open cannot be null");
   }
 
   public void open(Env env, String savePath, String sessionName)

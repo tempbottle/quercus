@@ -34,16 +34,15 @@ import com.caucho.quercus.annotation.Optional;
 import com.caucho.quercus.env.*;
 import com.caucho.quercus.lib.OutputModule;
 import com.caucho.quercus.module.AbstractQuercusModule;
-import com.caucho.quercus.module.ModuleStartupListener;
-import com.caucho.quercus.module.IniDefinitions;
 import com.caucho.quercus.module.IniDefinition;
+import com.caucho.quercus.module.IniDefinitions;
+import com.caucho.quercus.module.ModuleStartupListener;
 import com.caucho.quercus.servlet.api.QuercusCookie;
 import com.caucho.quercus.servlet.api.QuercusCookieImpl;
 import com.caucho.quercus.servlet.api.QuercusHttpServletResponse;
 import com.caucho.util.L10N;
 
 import java.util.logging.Logger;
-import java.util.Iterator;
 
 /**
  * Quercus session handling
@@ -394,14 +393,17 @@ public class SessionModule extends AbstractQuercusModule
    * Sets the session save handler
    */
   public boolean session_set_save_handler(Env env,
-                                          Callable open,
-                                          Callable close,
-                                          Callable read,
-                                          Callable write,
-                                          Callable destroy,
-                                          Callable gc)
+                                          ObjectValue open,
+                                          @Optional Callable close,
+                                          @Optional Callable read,
+                                          @Optional Callable write,
+                                          @Optional Callable destroy,
+                                          @Optional Callable gc)
 
   {
+    if (open.getQuercusClass().getInstanceofSet().contains(SessionHandlerInterface.class.getSimpleName().toLowerCase())) {
+      return session_set_save_handler_class(env, open);
+    }
     SessionCallback cb
       = new SessionCallback(open, close, read, write, destroy, gc);
 
@@ -410,6 +412,19 @@ public class SessionModule extends AbstractQuercusModule
     return true;
   }
 
+  /**
+   * Sets the session save handler
+   */
+  private boolean session_set_save_handler_class(Env env,
+                                                 ObjectValue sessionHandler)
+
+  {
+    SessionCallback cb
+            = new SessionHandlerDelegatedCallback(sessionHandler);
+
+    env.setSessionCallback(cb);
+    return true;
+  }
   /**
    * Returns the status of the session.
    */
