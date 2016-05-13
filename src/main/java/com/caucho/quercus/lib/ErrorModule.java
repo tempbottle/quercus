@@ -106,10 +106,12 @@ public class ErrorModule extends AbstractQuercusModule {
                                            @Optional("DEBUG_BACKTRACE_PROVIDE_OBJECT") int options,
                                            @Optional int limit)
   {
-    Exception e = new Exception();
-    e.fillInStackTrace();
-
-    return debug_backtrace_exception(env, e, options);
+    boolean isPrintArgs = (options & DEBUG_BACKTRACE_IGNORE_ARGS) == 0;
+    ArrayValue result = new ArrayValueImpl();
+    for (int i = 0; env.peekCall(i) != null && (i < limit || limit == 0); i++) {
+      addInterpreted(env, result, i, isPrintArgs);
+    }
+    return result;
   }
 
   public static ArrayValue debug_backtrace_exception(Env env,
@@ -152,7 +154,7 @@ public class ErrorModule extends AbstractQuercusModule {
         call.put(env.createString("function"), env.createString(fun));
 
         if (isPrintArgs) {
-          call.put(env.createString("args"), new ArrayValueImpl());
+          call.put(env.createString("args"), new ArrayValueImpl(env.peekArgs(i)));
         }
       }
       else if (className.startsWith("_quercus._")
@@ -173,7 +175,7 @@ public class ErrorModule extends AbstractQuercusModule {
         call.put(env.createString("type"), env.createString("->"));
 
         if (isPrintArgs) {
-          call.put(env.createString("args"), new ArrayValueImpl());
+          call.put(env.createString("args"), new ArrayValueImpl(env.peekArgs(i)));
         }
       }
       else if (className.startsWith("_quercus._")
@@ -266,7 +268,7 @@ public class ErrorModule extends AbstractQuercusModule {
         call.put(env.createString("class"), env.createString(elt.getClassName()));
 
         if (isPrintArgs) {
-          call.put(env.createString("args"), new ArrayValueImpl());
+          call.put(env.createString("args"), new ArrayValueImpl(env.peekArgs(i)));
         }
       }
     }
@@ -352,7 +354,7 @@ public class ErrorModule extends AbstractQuercusModule {
       call.put(env.createString("type"), env.createString("->"));
 
       if (isPrintArgs) {
-        call.put(env.createString("args"), new ArrayValueImpl());
+        call.put(env.createString("args"), new ArrayValueImpl(env.peekArgs(i)));
       }
     }
     else if (expr instanceof FunIncludeExpr) {
@@ -611,7 +613,7 @@ public class ErrorModule extends AbstractQuercusModule {
    *
    * @param env the quercus environment
    * @param fun the error handler
-   * @param code errorMask error level
+   * @param errorMask error level
    */
   public static boolean set_error_handler(Env env,
                                           Callable fun,
